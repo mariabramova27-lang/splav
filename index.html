@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тренажёр · Смеси и сплавы · Мягкая математика</title>
+<style>
+  :root{
+    --bg:#f7f2ff; --card:#ffffff; --ink:#2a2350; --soft:#7a6fa8;
+    --p1:#8b6dff; --p1d:#6c4ae0; --p2:#ff8fb1; --p3:#5ed0b8; --gold:#ffce54;
+    --ok:#4caf7d; --err:#ff6b6b; --line:#ece4fa;
+    --sh:0 10px 30px rgba(74,54,140,.10);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,'Nunito',sans-serif;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #ffe3ef 0%, transparent 60%),
+      radial-gradient(1000px 500px at 110% 10%, #dcf8f1 0%, transparent 55%),
+      radial-gradient(900px 500px at 50% 110%, #ffe9c9 0%, transparent 55%),
+      var(--bg);
+    color:var(--ink); min-height:100vh; overflow-x:hidden;
+  }
+  .blob{position:fixed;border-radius:50%;filter:blur(60px);opacity:.32;pointer-events:none;z-index:0}
+  .blob.b1{width:320px;height:320px;background:#d6c7ff;top:-80px;left:-80px}
+  .blob.b2{width:260px;height:260px;background:#ffd6e3;top:40%;right:-100px}
+  .blob.b3{width:300px;height:300px;background:#c8f0e4;bottom:-100px;left:20%}
+
+  #bgFX{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+  #bgFX .bg-item{
+    position:absolute;bottom:-14vh;display:block;opacity:0;will-change:transform,opacity;
+    animation-name:rise;animation-timing-function:linear;animation-iteration-count:infinite;
+  }
+  @keyframes rise{
+    0%{transform:translate3d(0,0,0) rotate(0deg);opacity:0}
+    6%{opacity:var(--op,.12)}
+    94%{opacity:var(--op,.12)}
+    100%{transform:translate3d(var(--dx,0),-135vh,0) rotate(var(--rot,20deg));opacity:0}
+  }
+
+  #fx{position:fixed;inset:0;pointer-events:none;z-index:150;overflow:hidden}
+  .particle{position:absolute;font-size:20px;animation:fall 1.5s linear forwards}
+  @keyframes fall{to{transform:translateY(115vh) rotate(540deg);opacity:0}}
+
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 16px 110px;position:relative;z-index:2}
+
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:14.5px;color:var(--ink)}
+  .brand-logo{
+    width:34px;height:34px;border-radius:11px;flex-shrink:0;
+    background:linear-gradient(135deg,var(--p1),var(--p2));
+    display:flex;align-items:center;justify-content:center;font-size:17px;
+    box-shadow:0 6px 16px rgba(139,109,255,.35);position:relative;
+  }
+  .brand-logo::after{content:"";position:absolute;inset:3px;border-radius:8px;border:1.5px solid rgba(255,255,255,.55)}
+  .brand-text{display:flex;flex-direction:column;line-height:1.05}
+  .brand-text b{font-size:14.5px}
+  .brand-text span{font-size:11px;font-weight:700;color:var(--soft);letter-spacing:.4px}
+
+  .stats{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-weight:700;font-size:13.5px;box-shadow:var(--sh);display:flex;align-items:center;gap:5px}
+  .chip.coins{background:linear-gradient(135deg,#fff8e1,#ffeec2);border-color:#ffe1a3}
+  .chip.coins b{color:#a06b12}
+  .chip.progress{background:linear-gradient(135deg,#f3ecff,#fbe9ff);border-color:#e3d0ff}
+  .chip.progress b{color:var(--p1d)}
+  .chip b{font-weight:900}
+  .menu-btn{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-weight:800;font-size:13px;color:var(--p1);cursor:pointer;box-shadow:var(--sh);transition:.2s;font-family:inherit}
+  .menu-btn:hover{background:#f3ecff;transform:translateY(-1px)}
+
+  .bar{height:14px;background:#fff;border:1px solid var(--line);border-radius:999px;overflow:hidden;box-shadow:var(--sh);margin:8px 0 20px;position:relative}
+  .bar>div{height:100%;width:0;background:linear-gradient(90deg,var(--p1),var(--p2),var(--gold));background-size:200% 100%;
+    transition:width .7s cubic-bezier(.2,.9,.3,1.2);border-radius:999px;position:relative;overflow:hidden;animation:flow 6s linear infinite}
+  .bar>div::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);animation:shine 2.4s ease-in-out infinite}
+  @keyframes flow{to{background-position:200% 0}}
+  @keyframes shine{0%{transform:translateX(-100%)}60%,100%{transform:translateX(100%)}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:var(--sh);padding:24px;animation:pop .4s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes shake{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  @keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(139,109,255,.4)}50%{box-shadow:0 0 0 10px rgba(139,109,255,0)}}
+
+  .hero{text-align:center;padding:28px 18px}
+  .hero h1{font-size:clamp(22px,4vw,32px);margin:6px 0 6px;letter-spacing:-.5px;
+    background:linear-gradient(135deg,var(--p1d),var(--p2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero .tag{color:var(--p1);font-weight:800;font-size:12px;letter-spacing:1.6px;text-transform:uppercase}
+  .hero p{color:var(--soft);max-width:620px;margin:10px auto 16px;line-height:1.6;font-size:14.5px}
+  .hero .cat-big{font-size:64px;animation:float 3s ease-in-out infinite;display:inline-block;filter:drop-shadow(0 10px 20px rgba(139,109,255,.25))}
+
+  .hero-say{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,#faf8ff,#f3ecff);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:14px 0;text-align:left}
+  .hero-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#2a2350,#4a3a8a);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 6px 14px rgba(42,35,80,.25)}
+  .hero-text{font-size:14.5px;line-height:1.55;color:var(--ink)}
+  .hero-text b{color:var(--p1d)}
+
+  .rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:16px 0}
+  .rule{background:linear-gradient(135deg,#faf7ff,#f3ecff);border:1px dashed #d9ccff;border-radius:14px;padding:12px 14px;text-align:left;font-size:13.5px}
+  .rule b{color:var(--p1);display:block;margin-bottom:2px;font-size:14px}
+
+  button{font-family:inherit;font-weight:800;font-size:15px;border:none;border-radius:14px;padding:13px 22px;cursor:pointer;transition:transform .12s, box-shadow .2s, filter .2s}
+  button:active{transform:scale(.96)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .btn-p{background:linear-gradient(135deg,var(--p1),#a58bff);color:#fff;box-shadow:0 10px 24px rgba(139,109,255,.4)}
+  .btn-p:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-2px);box-shadow:0 14px 30px rgba(139,109,255,.5)}
+  .btn-g{background:#eafff6;color:#2a8871;border:1px solid #b9ecd9}
+  .btn-g:hover:not(:disabled){background:#dbfff0}
+  .btn-n{background:#f3ecff;color:var(--p1);border:1px solid var(--line)}
+  .btn-n:hover{background:#ebe2ff}
+  .btn-r{background:#ffe9ef;color:#c53a67;border:1px solid #ffd0dd}
+
+  .stage-head{margin-bottom:14px}
+  .stage-head .world{font-size:11.5px;font-weight:800;color:var(--p1);letter-spacing:1.3px;text-transform:uppercase}
+  .stage-head h2{font-size:20px;margin:4px 0 8px;letter-spacing:-.3px;
+    background:linear-gradient(135deg,var(--ink),var(--p1d));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stage-head .dots{display:flex;gap:5px;margin-top:8px}
+  .stage-head .dots span{width:22px;height:6px;border-radius:3px;background:#efe7ff;transition:.3s}
+  .stage-head .dots span.done{background:linear-gradient(90deg,var(--p1),var(--p2))}
+  .stage-head .dots span.now{background:var(--p1);animation:glow 1.8s infinite}
+
+  /* Sort (испытания) */
+  .pool{display:flex;flex-wrap:wrap;gap:8px;padding:14px;background:#faf8ff;border:1.5px dashed #d9ccff;border-radius:16px;min-height:72px;margin:10px 0 14px}
+  .pool:empty::before{content:"Все карточки разложены ✓";color:var(--soft);font-size:13px;font-style:italic;margin:auto}
+  .chip-el{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#fff;border:2px solid var(--line);border-radius:999px;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;user-select:none;box-shadow:0 2px 4px rgba(74,54,140,.04)}
+  .chip-el:hover{border-color:#c9b8ff;transform:translateY(-1px)}
+  .chip-el.selected{border-color:var(--p1);background:#f3ecff;box-shadow:0 8px 18px rgba(139,109,255,.25);transform:translateY(-2px)}
+  .chip-el.placed{background:#eafff6;border-color:var(--ok);color:#2a8871}
+
+  .baskets{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px}
+  .basket{background:#fff;border:2px dashed #d9ccff;border-radius:16px;padding:11px;min-height:130px;cursor:pointer;transition:.2s}
+  .basket:hover{border-color:#c9b8ff;background:#faf7ff}
+  .basket.active-drop{border-color:var(--p1);background:#f3ecff;box-shadow:0 0 0 3px rgba(139,109,255,.2)}
+  .basket.wrong{border-color:var(--err);background:#fff5f5;animation:shake .4s}
+  .basket-head{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:8px;flex-wrap:wrap}
+  .basket-head .b-sub{font-size:11px;color:var(--soft);font-weight:600;margin-left:auto}
+  .basket-body{display:flex;flex-wrap:wrap;gap:6px;min-height:40px}
+  .basket-body:empty::before{content:"нажми сюда →";color:#c9b8ff;font-size:12px;font-style:italic}
+
+  /* Calc */
+  .calc-task{background:linear-gradient(135deg,#faf8ff,#f3ecff);border:1px solid var(--line);border-radius:16px;padding:14px 16px;font-size:15px;line-height:1.55;margin-bottom:14px}
+  .calc-task b{color:var(--p1d)}
+
+  .bar-model{margin:14px 0}
+  .bar-row{display:flex;height:60px;border-radius:10px;overflow:hidden;border:2px solid var(--p1d);background:#fff}
+  .bar-seg{display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff;font-weight:800;font-size:13px;text-align:center;padding:4px;min-width:26px;transition:.4s}
+  .bar-seg-solute{background:linear-gradient(135deg,#8b6dff,#6c4ae0)}
+  .bar-seg-solvent{background:linear-gradient(135deg,#c9b8ff,#a58bff);color:#3a2e6a}
+  .bar-lbl{font-size:15px;font-weight:900}
+  .bar-sub{font-size:10.5px;font-weight:600;opacity:.85;margin-top:2px}
+  .bar-total{text-align:center;font-size:13px;color:var(--soft);font-weight:700;margin-top:6px}
+
+  .mix-visual{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:16px 0;padding:16px;background:linear-gradient(135deg,#faf8ff,#f3ecff);border:1px solid var(--line);border-radius:16px}
+  .mix-item{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .beaker-svg{width:56px;height:105px;display:block}
+  .mix-result .beaker-svg{width:64px;height:120px}
+  .mix-label{font-size:12.5px;font-weight:800;color:var(--ink);background:#fff;padding:4px 10px;border-radius:999px;border:1px solid var(--line);box-shadow:0 2px 6px rgba(74,54,140,.08);white-space:nowrap}
+  .mix-plus,.mix-eq{font-size:22px;font-weight:900;color:var(--p1d)}
+  .mix-result .mix-label{background:linear-gradient(135deg,#fff4cf,#ffe0ef);border-color:#ffd6a8;color:#a06b12}
+
+  .calc-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0}
+  .calc-input{flex:1;min-width:140px;padding:13px 16px;font-size:16px;font-weight:800;font-family:inherit;border:2px solid var(--line);border-radius:12px;background:#faf8ff;color:var(--ink);transition:.15s}
+  .calc-input:focus{outline:none;border-color:var(--p1);background:#fff;box-shadow:0 0 0 4px rgba(139,109,255,.15)}
+  .calc-input.shake{animation:shake .4s;border-color:var(--err)}
+  .calc-unit{font-size:16px;font-weight:800;color:var(--p1d)}
+
+  .calc-fb{margin-top:12px;padding:12px 14px;border-radius:12px;font-size:14px;line-height:1.55;animation:pop .3s ease}
+  .calc-fb.ok{background:#eafff6;color:#2a8871;border:1px solid #b9ecd9}
+  .calc-fb.no{background:#fff5f5;color:#c53a67;border:1px solid #ffd0dd}
+  .calc-fb b{font-weight:900}
+
+  .hint-box{margin-top:10px;padding:12px 14px;background:linear-gradient(135deg,#fff8e1,#ffeec2);border:1px solid #ffe1a3;border-radius:12px;font-size:13.5px;line-height:1.55;color:#7a5a10}
+  .hint-box b{color:#a06b12}
+
+  .done-banner{background:linear-gradient(135deg,#eafff6,#f3ecff);border:2px solid #b9ecd9;border-radius:16px;padding:14px 18px;text-align:center;margin:16px 0;font-weight:800;color:#2a8871;font-size:14.5px;animation:pop .4s ease}
+  .done-banner .bonus{color:#a06b12;display:block;margin-top:4px;font-size:13px}
+
+  .advance-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .advance-row button{min-width:200px}
+
+  .final{text-align:center;padding:20px 14px}
+  .trophy{font-size:76px;animation:float 2.4s ease-in-out infinite;display:inline-block}
+  .medal{display:inline-block;margin:12px auto;padding:9px 22px;border-radius:999px;background:linear-gradient(135deg,#fff4cf,#ffe0ef);border:1px solid #ffd6a8;font-weight:800;color:#a06b12;box-shadow:var(--sh);font-size:14px}
+
+  .summary{background:#fff;border:2px solid var(--line);border-radius:20px;padding:18px;max-width:600px;margin:16px auto;text-align:left}
+  .summary h3{margin:0 0 12px;font-size:16px;text-align:center;color:var(--p1d)}
+  .summary .rule-line{display:flex;gap:10px;padding:9px 12px;background:linear-gradient(135deg,#faf8ff,#f3ecff);border-radius:11px;margin-bottom:8px;font-size:14px;font-weight:700;color:var(--ink);line-height:1.5}
+  .summary .rule-line span:first-child{color:var(--p1d);font-weight:900;flex-shrink:0}
+
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(100px);background:linear-gradient(135deg,var(--p1),#a58bff);color:#fff;padding:14px 22px;border-radius:14px;font-weight:800;font-size:14.5px;box-shadow:0 14px 30px rgba(139,109,255,.35);z-index:300;opacity:0;transition:.4s;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .tiny{font-size:12.5px;color:var(--soft)}
+  .hidden{display:none!important}
+
+  /* ===== Урок на конфетах ===== */
+  .lesson-steps{display:flex;gap:6px;margin:10px 0 16px;flex-wrap:wrap}
+  .step-pill{flex:1;min-width:60px;height:8px;border-radius:4px;background:#efe7ff;transition:.3s;position:relative}
+  .step-pill.done{background:linear-gradient(90deg,var(--p1),var(--p2))}
+  .step-pill.now{background:var(--p1);animation:glow 1.8s infinite}
+
+  .candy-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;padding:14px;background:#faf8ff;border:1.5px dashed #d9ccff;border-radius:16px;margin:10px 0}
+  .candy-item{font-size:26px;text-align:center;cursor:pointer;transition:.15s;user-select:none;padding:4px;border-radius:10px;border:2px solid transparent}
+  .candy-item:hover{transform:scale(1.15);background:#fff}
+  .candy-item.selected{border-color:var(--p1);background:#f3ecff;transform:scale(1.1)}
+  .candy-item.dim{opacity:.35;pointer-events:none}
+  .candy-item.in-zone{font-size:24px;cursor:pointer}
+
+  .candy-zones{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .candy-zone{background:#fff;border:2px dashed #d9ccff;border-radius:16px;padding:11px;min-height:100px;transition:.2s;cursor:pointer}
+  .candy-zone:hover{border-color:#c9b8ff;background:#faf7ff}
+  .candy-zone.active-drop{border-color:var(--p1);background:#f3ecff;box-shadow:0 0 0 3px rgba(139,109,255,.2)}
+  .candy-zone-head{display:flex;align-items:center;gap:6px;font-weight:800;font-size:13.5px;padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:8px}
+  .candy-zone-head .z-count{font-size:11.5px;color:var(--soft);font-weight:600;margin-left:auto}
+  .candy-zone-body{display:flex;flex-wrap:wrap;gap:4px;min-height:40px}
+  .candy-zone-body:empty::before{content:"перетащи сюда →";color:#c9b8ff;font-size:12px;font-style:italic}
+
+  .range-wrap{display:flex;align-items:center;gap:12px;margin:16px 0}
+  .range{flex:1;-webkit-appearance:none;appearance:none;height:10px;border-radius:5px;background:linear-gradient(90deg,#c9b8ff,#8b6dff);outline:none}
+  .range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--p1);cursor:pointer;box-shadow:0 4px 10px rgba(139,109,255,.35)}
+  .range::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--p1);cursor:pointer}
+  .range-val{font-size:18px;font-weight:900;color:var(--p1d);min-width:70px;text-align:center;background:#fff;padding:8px 12px;border-radius:12px;border:1px solid var(--line)}
+
+  .bags-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:14px 0}
+  .bag{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;background:linear-gradient(135deg,#faf8ff,#f3ecff);border:2px dashed #c9b8ff;border-radius:16px;cursor:pointer;transition:.2s;min-width:110px}
+  .bag:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(139,109,255,.18);border-color:var(--p1)}
+  .bag.used{opacity:.3;pointer-events:none}
+  .bag-icon{font-size:32px}
+  .bag-label{font-size:12.5px;font-weight:800;text-align:center;line-height:1.3;color:var(--ink)}
+  .bag-label small{display:block;color:var(--soft);font-size:11px;font-weight:600}
+
+  .jar{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px;background:linear-gradient(135deg,#fff8e1,#ffeec2);border:2px solid #ffe1a3;border-radius:16px;min-height:110px;justify-content:center;margin:0 auto;max-width:260px}
+  .jar-icon{font-size:44px}
+  .jar-label{font-size:13.5px;font-weight:900;color:#a06b12;text-align:center;line-height:1.4}
+
+  .lesson-formula{background:linear-gradient(135deg,#f3ecff,#ffe7f0);border:2px solid #e3d0ff;border-radius:16px;padding:16px;margin:14px 0;text-align:center}
+  .lesson-formula .f-line{font-size:15px;font-weight:800;color:var(--p1d);line-height:1.6}
+  .lesson-formula .f-line small{display:block;color:var(--soft);font-size:12px;font-weight:600;margin-top:4px}
+
+  .center{text-align:center}
+
+  /* ===== Реклама ===== */
+  #promo{position:fixed;right:16px;bottom:16px;z-index:70;width:290px;max-width:calc(100vw - 32px);font-size:13px;line-height:1.45}
+  #promo .pcard{background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:18px;box-shadow:0 14px 34px rgba(74,54,140,.18);padding:12px 14px}
+  #promo .phead{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800;color:var(--p1d);cursor:pointer;font-size:13.5px;user-select:none}
+  #promo .pbody{margin-top:8px}
+  #promo.collapsed .pbody{display:none}
+  #promo .ptag{display:inline-block;font-size:11px;font-weight:800;color:#a06b12;background:#fff4cf;border-radius:999px;padding:2px 8px;margin-bottom:6px}
+  #promo .ptitle{color:var(--ink);font-weight:800;margin-bottom:3px;font-size:13px}
+  #promo .ptext{color:var(--soft);font-size:12.5px;margin-bottom:8px}
+  #promo a{display:block;color:#5a3fd6;font-weight:700;text-decoration:none;border-bottom:1px dashed #c9b8ff;margin-top:6px;font-size:12.8px}
+  #promo a:hover{color:#3f24b0}
+  #promo .pchev{font-weight:900;font-size:15px;color:var(--p1d)}
+
+  .promo-line{margin-top:18px;font-size:12.5px;color:var(--soft);line-height:1.6;text-align:center}
+  .promo-line b{color:var(--p1d)}
+  .promo-line a{color:#5a3fd6;font-weight:700;text-decoration:none;border-bottom:1px dashed #c9b8ff}
+  .promo-line a:hover{color:#3f24b0}
+
+  @media(max-width:600px){
+    .wrap{padding:14px 12px 110px}
+    .card{padding:16px;border-radius:20px}
+    .hero h1{font-size:22px}
+    #promo{right:10px;bottom:10px;width:calc(100vw - 20px)}
+    .beaker-svg{width:48px;height:90px}
+    .mix-result .beaker-svg{width:54px;height:100px}
+    .candy-grid{grid-template-columns:repeat(5,1fr)}
+    .candy-zones{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+<div class="blob b3"></div>
+<div id="bgFX" aria-hidden="true"></div>
+<div id="fx"></div>
+<div id="toast"></div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-logo">🧪</div>
+      <div class="brand-text"><b>Мягкая математика</b><span>Смеси и сплавы</span></div>
+    </div>
+    <div class="stats">
+      <div class="chip coins">💰 <b id="coins">0</b></div>
+      <div class="chip progress">🎯 <b id="progressLabel">0/6</b></div>
+      <button class="menu-btn" id="menuBtn" type="button">🏠 Меню</button>
+    </div>
+  </header>
+  <div class="bar"><div id="progressBar"></div></div>
+  <main id="main"></main>
+</div>
+
+<aside id="promo" aria-label="Мягкая математика — реклама">
+  <div class="pcard">
+    <div class="phead" id="promoToggle">
+      <span>🎓 Мягкая математика</span>
+      <span class="pchev" id="promoChevron">−</span>
+    </div>
+    <div class="pbody">
+      <span class="ptag">ОГЭ · ЕГЭ · олимпиады</span>
+      <div class="ptitle">Подготовка к ОГЭ/ЕГЭ и занятия по математике</div>
+      <div class="ptext">1–11 классы: онлайн-курсы, олимпиадная подготовка, мягкий подход без стресса.</div>
+      <a href="https://vk.com/smartskillsmaria" target="_blank" rel="noopener">📣 Подписаться на группу ВК</a>
+      <a href="https://vk.com/im/convo/-229273902?entrypoint=community_page&amp;tab=all" target="_blank" rel="noopener">✉️ Написать Марии Абрамовой</a>
+    </div>
+  </div>
+</aside>
+
+<script>
+/* ==================== ДАННЫЕ: ТРЕНАЖЁР ==================== */
+const STAGES = [
+  {
+    id:'s1', type:'sort', world:'Уровень 1', title:'Что есть что?',
+    story:'В задачах на смеси важно различать три вещи: вещество (что растворяем), растворитель (в чём растворяем) и смесь (что получилось). Разложи карточки по корзинам.',
+    items:[
+      {id:'i1', emoji:'🧂', text:'9 г соли', correct:'solute'},
+      {id:'i2', emoji:'💧', text:'100 г воды', correct:'solvent'},
+      {id:'i3', emoji:'🥛', text:'109 г раствора', correct:'mixture'},
+      {id:'i4', emoji:'🍬', text:'20 г сахара', correct:'solute'},
+      {id:'i5', emoji:'🧃', text:'200 г компота', correct:'mixture'},
+      {id:'i6', emoji:'💦', text:'300 г воды', correct:'solvent'}
+    ],
+    baskets:[
+      {id:'solute', name:'Вещество', emoji:'🧂', sub:'что растворяем'},
+      {id:'solvent', name:'Растворитель', emoji:'💧', sub:'в чём растворяем'},
+      {id:'mixture', name:'Смесь (раствор)', emoji:'🥛', sub:'что получилось'}
+    ]
+  },
+  {
+    id:'s2', type:'calc', world:'Уровень 2', title:'Найди вещество',
+    story:'В 200 г раствора — 15% соли. Сколько это граммов соли? Помни: 1% — это одна сотая часть.',
+    barModel:{ total:200, percent:15, question:'solute' },
+    question:'Сколько граммов соли в растворе?',
+    answer:30, unit:'г',
+    hint:'1% от 200 г = 200 ÷ 100 = 2 г. Значит, 15% = 2 × 15 = 30 г.',
+    solution:'15% от 200 г = 200 ÷ 100 × 15 = 2 × 15 = 30 г соли.'
+  },
+  {
+    id:'s3', type:'calc', world:'Уровень 3', title:'Найди концентрацию',
+    story:'В 300 г раствора — 45 г соли. Какая концентрация раствора?',
+    barModel:{ total:300, solute:45, question:'percent' },
+    question:'Какая концентрация раствора (в %)?',
+    answer:15, unit:'%',
+    hint:'Концентрация = масса вещества ÷ масса смеси × 100%. 45 ÷ 300 × 100% = ?',
+    solution:'Концентрация = 45 г ÷ 300 г × 100% = 0,15 × 100% = 15%.'
+  },
+  {
+    id:'s4', type:'mix', world:'Уровень 4', title:'Смешали поровну',
+    story:'Смешали 100 г 10%-го раствора и 100 г 30%-го раствора. Какая концентрация получилась?',
+    beakers:[{mass:100, conc:10}, {mass:100, conc:30}],
+    resultMass:200,
+    question:'Какая концентрация получилась (в %)?',
+    answer:20, unit:'%',
+    hint:'Соль в 1-м: 100 × 0,10 = 10 г. Соль во 2-м: 100 × 0,30 = 30 г. Всего соли: 40 г. Масса: 200 г. Концентрация: 40 ÷ 200 × 100% = 20%.',
+    solution:'Вещество: 10 г + 30 г = 40 г. Смесь: 100 г + 100 г = 200 г. Концентрация = 40 ÷ 200 × 100% = 20%.'
+  },
+  {
+    id:'s5', type:'mix', world:'Уровень 5', title:'Смешали с разными массами',
+    story:'Смешали 200 г 10%-го раствора и 300 г 20%-го раствора. Какая концентрация получилась?',
+    beakers:[{mass:200, conc:10}, {mass:300, conc:20}],
+    resultMass:500,
+    question:'Какая концентрация получилась (в %)?',
+    answer:16, unit:'%',
+    hint:'Соль в 1-м: 200 × 0,10 = 20 г. Соль во 2-м: 300 × 0,20 = 60 г. Всего соли: 80 г. Масса: 500 г. Концентрация: 80 ÷ 500 × 100% = 16%.',
+    solution:'Вещество: 20 + 60 = 80 г. Смесь: 200 + 300 = 500 г. Концентрация = 80 ÷ 500 × 100% = 16%.'
+  },
+  {
+    id:'s6', type:'calc', world:'Уровень 6 · Босс', title:'Разбавь раствор',
+    story:'У тебя есть 100 г 20%-го раствора. Сколько воды нужно добавить, чтобы концентрация стала 10%?',
+    question:'Сколько граммов воды добавить?',
+    answer:100, unit:'г',
+    hint:'Соль остаётся той же: 100 × 0,20 = 20 г. Хотим 10% — значит, 20 г соли должно быть в 200 г раствора. Уже есть 100 г. Добавить: 200 − 100 = 100 г воды.',
+    solution:'Соль: 20 г (не меняется!). Для 10%: 20 ÷ 0,10 = 200 г раствора. Добавить: 200 − 100 = 100 г воды.'
+  }
+];
+
+/* ==================== СОСТОЯНИЕ ==================== */
+const LS = 'mm_trainer_mixtures_v2';
+let state = load() || freshState();
+function freshState(){
+  return { screen:'intro', coins:0, completed:[], lessonDone:false, lessonStep:0 };
+}
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){} }
+function load(){ try{ return JSON.parse(localStorage.getItem(LS)); }catch(e){ return null; } }
+
+const $ = id => document.getElementById(id);
+const main = () => $('main');
+const shuffle = a => a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
+
+let AC = null;
+function beep(freq=880, dur=0.35){
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.connect(g); g.connect(AC.destination);
+    o.type='sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.14, AC.currentTime+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime+dur);
+    o.start(); o.stop(AC.currentTime+dur+0.02);
+  }catch(e){}
+}
+
+function confetti(n=22){
+  const fx = $('fx');
+  const emo = ['⭐','✨','🎉','💫','💜','🍬','🍫','🏅','🌟','🎈'];
+  for(let i=0;i<n;i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = emo[Math.floor(Math.random()*emo.length)];
+    p.style.left = Math.random()*100 + 'vw';
+    p.style.top = '-30px';
+    p.style.animationDuration = (1.1+Math.random()*1.2) + 's';
+    p.style.fontSize = (16+Math.random()*18) + 'px';
+    fx.appendChild(p);
+    setTimeout(()=>p.remove(), 2500);
+  }
+}
+
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._id);
+  t._id = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+function updateHUD(){
+  $('coins').textContent = state.coins;
+  $('progressLabel').textContent = state.completed.length + '/' + STAGES.length;
+  $('progressBar').style.width = (state.completed.length / STAGES.length) * 100 + '%';
+}
+
+/* ==================== ФОН ==================== */
+(function initBG(){
+  const layer = document.getElementById('bgFX');
+  if(!layer) return;
+  try{
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      layer.style.display = 'none';
+      return;
+    }
+  }catch(e){}
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const POOL = [
+    {k:'t', v:'%'}, {k:'t', v:'×'}, {k:'t', v:'÷'}, {k:'t', v:'√'}, {k:'t', v:'π'},
+    {k:'t', v:'∞'}, {k:'t', v:'∑'}, {k:'t', v:'½'}, {k:'t', v:'¾'}, {k:'t', v:'★'}, {k:'t', v:'✦'},
+    {k:'s', v:'triangle'}, {k:'s', v:'square'}, {k:'s', v:'circle'}, {k:'s', v:'hexagon'},
+    {k:'d', v:'tri3'}, {k:'d', v:'sq4'}, {k:'d', v:'hex6'}, {k:'d', v:'line5'}
+  ];
+  const COLORS = ['#8b6dff','#b9a6ff','#ff8fb1','#5ed0b8','#ffce54','#7aa8ff'];
+
+  function bgSvg(kind, v){
+    const svg = document.createElementNS(NS,'svg');
+    svg.setAttribute('viewBox','0 0 40 40');
+    svg.setAttribute('fill','none');
+    svg.setAttribute('stroke','currentColor');
+    svg.setAttribute('stroke-width','2.4');
+    svg.setAttribute('stroke-linejoin','round');
+    svg.setAttribute('stroke-linecap','round');
+    svg.style.width='1em'; svg.style.height='1em'; svg.style.display='block';
+    const add = (n,a)=>{ const e = document.createElementNS(NS,n); for(const k in a) e.setAttribute(k,a[k]); svg.appendChild(e); return e; };
+    if(kind==='s'){
+      if(v==='triangle') add('polygon',{points:'20,5 35,33 5,33'});
+      if(v==='square') add('rect',{x:'7',y:'7',width:'26',height:'26',rx:'2'});
+      if(v==='circle') add('circle',{cx:'20',cy:'20',r:'13'});
+      if(v==='hexagon') add('polygon',{points:'20,5 32,12 32,28 20,35 8,28 8,12'});
+    } else {
+      const dot = (x,y)=> add('circle',{cx:x,cy:y,r:'3.2',fill:'currentColor',stroke:'none'});
+      if(v==='tri3'){ dot(20,10); dot(12,24); dot(28,24); }
+      if(v==='sq4'){ dot(12,12); dot(28,12); dot(12,28); dot(28,28); }
+      if(v==='hex6'){ dot(20,8); dot(32,16); dot(32,28); dot(20,34); dot(8,28); dot(8,16); }
+      if(v==='line5'){ for(let i=0;i<5;i++) dot(6+i*7, 20); }
+    }
+    return svg;
+  }
+
+  const COUNT = window.innerWidth < 600 ? 14 : 26;
+  const frag = document.createDocumentFragment();
+  for(let i=0;i<COUNT;i++){
+    const pick = POOL[Math.floor(Math.random()*POOL.length)];
+    const wrap = document.createElement('span');
+    wrap.className = 'bg-item';
+    wrap.setAttribute('aria-hidden','true');
+    if(pick.k === 't'){
+      wrap.textContent = pick.v;
+      wrap.style.fontWeight='800';
+      wrap.style.lineHeight='1';
+      wrap.style.fontFamily = "Georgia, 'Times New Roman', serif";
+    } else {
+      wrap.appendChild(bgSvg(pick.k, pick.v));
+    }
+    const size = 16 + Math.random()*26;
+    wrap.style.fontSize = size.toFixed(1) + 'px';
+    wrap.style.left = (Math.random()*100).toFixed(2) + 'vw';
+    wrap.style.color = COLORS[Math.floor(Math.random()*COLORS.length)];
+    wrap.style.setProperty('--op', (0.06 + Math.random()*0.09).toFixed(3));
+    wrap.style.setProperty('--dx', (Math.random()*140 - 70).toFixed(0) + 'px');
+    wrap.style.setProperty('--rot', (Math.random()*90 - 45).toFixed(0) + 'deg');
+    const dur = 35 + Math.random()*40;
+    wrap.style.animationDuration = dur.toFixed(1) + 's';
+    wrap.style.animationDelay = (-Math.random()*dur).toFixed(1) + 's';
+    frag.appendChild(wrap);
+  }
+  layer.appendChild(frag);
+})();
+
+/* ==================== РЕКЛАМА ==================== */
+(function initPromo(){
+  const promo = $('promo');
+  const chev = $('promoChevron');
+  if(!promo) return;
+  $('promoToggle').addEventListener('click', ()=>{
+    promo.classList.toggle('collapsed');
+    chev.textContent = promo.classList.contains('collapsed') ? '+' : '−';
+  });
+  if(window.innerWidth < 600){
+    promo.classList.add('collapsed');
+    chev.textContent = '+';
+  }
+})();
+
+/* ==================== ИНТРО ==================== */
+let confirmReset = false;
+function renderIntro(){
+  state.screen = 'intro';
+  save();
+  const done = state.completed.length;
+  const allDone = done >= STAGES.length;
+  const hasProgress = done > 0;
+
+  let startLabel;
+  if(allDone) startLabel = '🏆 Итоги';
+  else if(hasProgress) startLabel = `▶ Продолжить · уровень ${done + 1}`;
+  else startLabel = '🚀 Начать тренажёр';
+
+  const lessonLabel = state.lessonDone ? '📖 Повторить объяснение на конфетах' : '🍬 Объяснение на конфетах';
+
+  main().innerHTML = `
+    <section class="card hero">
+      <div class="cat-big">🧪</div>
+      <div class="tag">Тренажёр · 6 испытаний · 20–25 минут</div>
+      <h1>Задачи на смеси и сплавы</h1>
+      <p>Интерактивная практика для 3–5 классов: считаем вещество, а не «налитое».</p>
+
+      <div class="hero-say">
+        <div class="hero-avatar">🐱</div>
+        <div class="hero-text"><b>Котэ-Косинус:</b> «Мяу! Сначала разберёмся на конфетах — там всё видно. Потом перейдём к растворам: соль, сахар, вода, сироп. Главное правило — <b>вещество не исчезает</b>, оно просто переезжает. Поехали!»</div>
+      </div>
+
+      <div class="rules">
+        <div class="rule"><b>🍬 Шаг 1 · Доля</b>Сколько конфет из всех — шоколадные?</div>
+        <div class="rule"><b>📊 Шаг 2 · Бар-модель</b>Полоска показывает долю наглядно</div>
+        <div class="rule"><b>🎒 Шаг 3 · Смешиваем</b>Перетащи мешочки — вещество суммируется</div>
+        <div class="rule"><b>⚖️ Шаг 4 · Средневзвешенное</b>Формула, которая всё объясняет</div>
+      </div>
+
+      <button class="btn-p" id="lessonBtn" type="button" style="font-size:16px;padding:14px 26px;margin-bottom:10px">${lessonLabel}</button>
+      <br>
+      <button class="btn-p" id="startBtn" type="button" style="font-size:17px;padding:14px 28px">${startLabel}</button>
+      ${hasProgress ? '<div style="margin-top:10px"><button class="btn-r" id="resetBtn" type="button">↺ Начать заново</button></div>' : ''}
+      <p class="tiny" style="margin-top:16px">За каждое испытание — 10 монет. Урок на конфетах — +20 монет.</p>
+
+      <div class="promo-line">
+        <b>Мягкая математика</b> · подготовка к ОГЭ/ЕГЭ, ВПР и олимпиадам ·
+        <a href="https://vk.com/smartskillsmaria" target="_blank" rel="noopener">подписаться на группу ВК</a> ·
+        <a href="https://vk.com/im/convo/-229273902?entrypoint=community_page&amp;tab=all" target="_blank" rel="noopener">написать Марии Абрамовой</a>
+      </div>
+    </section>
+  `;
+  updateHUD();
+
+  $('lessonBtn').addEventListener('click', ()=>{
+    beep();
+    state.lessonStep = 0;
+    state.screen = 'lesson';
+    save();
+    renderLesson();
+  });
+
+  $('startBtn').addEventListener('click', ()=>{
+    beep();
+    if(!state.lessonDone){
+      // сначала на урок
+      state.lessonStep = 0;
+      state.screen = 'lesson';
+      save();
+      renderLesson();
+      toast('Сначала — объяснение на конфетах 🍬');
+      return;
+    }
+    if(allDone) renderFinal();
+    else renderStage(state.completed.length);
+  });
+
+  if(hasProgress){
+    $('resetBtn').addEventListener('click', ()=>{
+      if(!confirmReset){
+        confirmReset = true;
+        $('resetBtn').textContent = '⚠ Точно? Нажми ещё раз';
+        setTimeout(()=>{ confirmReset = false; const b = $('resetBtn'); if(b) b.textContent = '↺ Начать заново'; }, 3500);
+        return;
+      }
+      state = freshState();
+      save();
+      renderIntro();
+    });
+  }
+}
+
+/* ==================== УРОК: ОБЩИЙ КАРКАС ==================== */
+function lessonShell(stepIdx, title, contentHTML){
+  const pills = [0,1,2,3].map(i=>{
+    const cls = i < stepIdx ? 'done' : (i === stepIdx ? 'now' : '');
+    return `<div class="step-pill ${cls}"></div>`;
+  }).join('');
+
+  return `
+    <section class="card">
+      <div class="stage-head">
+        <div class="world">🍬 Объяснение на конфетах · шаг ${stepIdx + 1} из 4</div>
+        <h2>${title}</h2>
+        <div class="lesson-steps">${pills}</div>
+      </div>
+      ${contentHTML}
+    </section>
+  `;
+}
+
+function renderLesson(){
+  if(state.lessonStep >= 4){
+    renderLessonFinal();
+    return;
+  }
+  const s = state.lessonStep;
+  if(s === 0) renderLesson1();
+  else if(s === 1) renderLesson2();
+  else if(s === 2) renderLesson3();
+  else if(s === 3) renderLesson4();
+}
+
+function nextLessonStep(){
+  state.lessonStep++;
+  save();
+  if(state.lessonStep >= 4){
+    renderLessonFinal();
+  } else {
+    renderLesson();
+  }
+}
+
+/* ==================== ШАГ 1: ДОЛЯ ==================== */
+function renderLesson1(){
+  state.screen = 'lesson';
+  save();
+  // 10 конфет: 3 шоколадные, 7 карамелек, перемешаны
+  const candies = [
+    {id:1, type:'choc'}, {id:2, type:'car'}, {id:3, type:'car'},
+    {id:4, type:'choc'}, {id:5, type:'car'}, {id:6, type:'car'},
+    {id:7, type:'car'}, {id:8, type:'choc'}, {id:9, type:'car'}, {id:10, type:'car'}
+  ];
+
+  const html = lessonShell(0, 'Шаг 1 · Что такое доля?', `
+    <div class="hero-say">
+      <div class="hero-avatar">🐱</div>
+      <div class="hero-text"><b>Котэ-Косинус:</b> «У меня 10 конфет. Три из них — шоколадные. Как узнать, какая это доля? Перетащи все шоколадные конфеты в правую корзину (или кликни на конфету, потом на корзину).»</div>
+    </div>
+
+    <div class="candy-grid" id="candyPool">
+      ${candies.map(c=>`<div class="candy-item" data-id="${c.id}" data-type="${c.type}" draggable="true">${c.type==='choc'?'🍫':'🍬'}</div>`).join('')}
+    </div>
+
+    <div class="candy-zones">
+      <div class="candy-zone" data-zone="left">
+        <div class="candy-zone-head">🍬 Все конфеты <span class="z-count" id="leftCount">10</span></div>
+        <div class="candy-zone-body" id="leftBody"></div>
+      </div>
+      <div class="candy-zone" data-zone="choc">
+        <div class="candy-zone-head">🍫 Шоколадные <span class="z-count" id="chocCount">0</span></div>
+        <div class="candy-zone-body" id="chocBody"></div>
+      </div>
+    </div>
+
+    <div class="advance-row">
+      <button class="btn-n" id="lessonResetBtn1" type="button">↺ Сброс</button>
+      <button class="btn-p" id="lessonNextBtn1" type="button" disabled>Дальше →</button>
+    </div>
+
+    <div id="lessonFb1" class="calc-fb hidden"></div>
+  `);
+  main().innerHTML = html;
+  updateHUD();
+
+  const pool = $('candyPool');
+  const chocBody = $('chocBody');
+  const leftBody = $('leftBody');
+  const chocCount = $('chocCount');
+  const leftCount = $('leftCount');
+  const nextBtn = $('lessonNextBtn1');
+  const fb = $('lessonFb1');
+
+  let selectedId = null;
+  let placedInChoc = new Set();
+
+  // изначально все в «левой» зоне — но проще: пул = все, корзины пустые
+  // отрисовка: конфеты из пула переносятся в chocBody, если placedInChoc
+  function renderAll(){
+    pool.innerHTML = '';
+    chocBody.innerHTML = '';
+    candies.forEach(c=>{
+      const el = document.createElement('div');
+      el.className = 'candy-item' + (placedInChoc.has(c.id) ? ' in-zone' : '');
+      el.dataset.id = c.id;
+      el.dataset.type = c.type;
+      el.textContent = c.type === 'choc' ? '🍫' : '🍬';
+      if(placedInChoc.has(c.id)){
+        el.draggable = false;
+        el.addEventListener('click', ()=>{
+          placedInChoc.delete(c.id);
+          beep(440, 0.15);
+          renderAll();
+          updateNext();
+        });
+        chocBody.appendChild(el);
+      } else {
+        el.draggable = true;
+        el.addEventListener('click', ()=>{
+          if(selectedId === c.id){ selectedId = null; }
+          else { selectedId = c.id; }
+          renderAll();
+          updateSelected();
+          beep(660, 0.1);
+        });
+        el.addEventListener('dragstart', e=>{
+          selectedId = c.id;
+          e.dataTransfer.effectAllowed = 'move';
+          try{ e.dataTransfer.setData('text/plain', c.id); }catch(_){}
+        });
+        pool.appendChild(el);
+      }
+    });
+    leftCount.textContent = candies.length - placedInChoc.size;
+    chocCount.textContent = placedInChoc.size;
+    updateSelected();
+    updateNext();
+  }
+
+  function updateSelected(){
+    pool.querySelectorAll('.candy-item').forEach(el=>{
+      if(+el.dataset.id === selectedId) el.classList.add('selected');
+      else el.classList.remove('selected');
+    });
+  }
+
+  function updateNext(){
+    const correctCount = [...placedInChoc].filter(id => candies.find(c=>c.id===id).type === 'choc').length;
+    const allChoc = placedInChoc.size === 3 && correctCount === 3;
+    if(allChoc && !nextBtn.disabled){
+      return;
+    }
+    if(allChoc){
+      nextBtn.disabled = false;
+      fb.classList.remove('hidden', 'no');
+      fb.classList.add('ok');
+      fb.innerHTML = `<b>✓ Отлично!</b> В правой корзине 3 шоколадные конфеты из 10 — это доля <b>3/10 = 30%</b>. Значит, шоколад занимает <b>30%</b> всех конфет.`;
+      confetti(14);
+      beep(1046, 0.4);
+    } else {
+      nextBtn.disabled = true;
+      fb.classList.add('hidden');
+    }
+  }
+
+  // клик по зоне «Шоколадные» — переместить выбранную туда
+  const chocZone = document.querySelector('[data-zone="choc"]');
+  chocZone.addEventListener('click', ()=>{
+    if(selectedId !== null){
+      placedInChoc.add(selectedId);
+      selectedId = null;
+      beep(880, 0.15);
+      renderAll();
+    }
+  });
+  chocZone.addEventListener('dragover', e=>{ e.preventDefault(); chocZone.classList.add('active-drop'); });
+  chocZone.addEventListener('dragleave', ()=>chocZone.classList.remove('active-drop'));
+  chocZone.addEventListener('drop', e=>{
+    e.preventDefault();
+    chocZone.classList.remove('active-drop');
+    let id = selectedId;
+    try{ const d = e.dataTransfer.getData('text/plain'); if(d) id = +d; }catch(_){}
+    if(id !== null && id !== undefined){
+      placedInChoc.add(id);
+      selectedId = null;
+      beep(880, 0.15);
+      renderAll();
+    }
+  });
+
+  // зона «Все конфеты» — вернуть шоколадную обратно
+  const leftZone = document.querySelector('[data-zone="left"]');
+  leftZone.addEventListener('click', ()=>{ /* ничего, просто клик */ });
+
+  $('lessonResetBtn1').addEventListener('click', ()=>{
+    placedInChoc.clear();
+    selectedId = null;
+    renderAll();
+    beep(440, 0.15);
+  });
+
+  nextBtn.addEventListener('click', ()=>{
+    beep();
+    nextLessonStep();
+  });
+
+  renderAll();
+}
+
+/* ==================== ШАГ 2: БАР-МОДЕЛЬ ==================== */
+function renderLesson2(){
+  state.screen = 'lesson';
+  save();
+  const html = lessonShell(1, 'Шаг 2 · Бар-модель', `
+    <div class="hero-say">
+      <div class="hero-avatar">🐱</div>
+      <div class="hero-text"><b>Котэ-Косинус:</b> «Полоска — это все 10 конфет. Двигай ползунок и смотри, как меняется доля шоколадных. Задача: сделай так, чтобы шоколадных было <b>40%</b> (то есть 4 из 10).»</div>
+    </div>
+
+    <div class="range-wrap">
+      <span style="font-size:13px;font-weight:800;color:var(--soft)">0</span>
+      <input type="range" min="0" max="10" value="3" class="range" id="lessonRange">
+      <span style="font-size:13px;font-weight:800;color:var(--soft)">10</span>
+      <div class="range-val" id="rangeVal">3/10</div>
+    </div>
+
+    <div class="bar-model">
+      <div class="bar-row" id="lessonBar">
+        <div class="bar-seg bar-seg-solute" id="barSolute" style="flex:3">
+          <div class="bar-lbl" id="barLbl1">3</div>
+          <div class="bar-sub">шоколад</div>
+        </div>
+        <div class="bar-seg bar-seg-solvent" id="barSolvent" style="flex:7">
+          <div class="bar-lbl" id="barLbl2">7</div>
+          <div class="bar-sub">карамель</div>
+        </div>
+      </div>
+      <div class="bar-total" id="barTotal">Всего: 10 конфет · шоколад: <b id="barPercent">30%</b></div>
+    </div>
+
+    <div class="advance-row">
+      <button class="btn-n" id="lessonResetBtn2" type="button">↺ Сброс</button>
+      <button class="btn-p" id="lessonCheckBtn2" type="button">✓ Проверить (40%)</button>
+    </div>
+    <div id="lessonFb2" class="calc-fb hidden"></div>
+    <div class="center" style="margin-top:14px">
+      <button class="btn-p hidden" id="lessonNextBtn2" type="button">Дальше →</button>
+    </div>
+  `);
+  main().innerHTML = html;
+  updateHUD();
+
+  const range = $('lessonRange');
+  const rangeVal = $('rangeVal');
+  const barSolute = $('barSolute');
+  const barSolvent = $('barSolvent');
+  const barLbl1 = $('barLbl1');
+  const barLbl2 = $('barLbl2');
+  const barPercent = $('barPercent');
+  const checkBtn = $('lessonCheckBtn2');
+  const fb = $('lessonFb2');
+  const nextBtn = $('lessonNextBtn2');
+
+  function update(){
+    const v = +range.value;
+    rangeVal.textContent = `${v}/10`;
+    if(v === 0){
+      barSolute.style.flex = 0;
+      barSolute.style.display = 'none';
+    } else {
+      barSolute.style.display = '';
+      barSolute.style.flex = v;
+    }
+    barSolvent.style.flex = 10 - v;
+    barLbl1.textContent = v;
+    barLbl2.textContent = 10 - v;
+    barPercent.textContent = (v * 10) + '%';
+  }
+  range.addEventListener('input', ()=>{ update(); beep(660, 0.05); });
+  update();
+
+  $('lessonResetBtn2').addEventListener('click', ()=>{
+    range.value = 3;
+    update();
+    beep(440, 0.15);
+  });
+
+  checkBtn.addEventListener('click', ()=>{
+    const v = +range.value;
+    fb.classList.remove('hidden', 'ok', 'no');
+    if(v === 4){
+      fb.classList.add('ok');
+      fb.innerHTML = `<b>✓ Верно!</b> 4 шоколадные из 10 — это 4/10 = 0,4 = <b>40%</b>. Полоска показывает: шоколад занимает 40% длины.`;
+      nextBtn.classList.remove('hidden');
+      confetti(14);
+      beep(1046, 0.4);
+    } else {
+      fb.classList.add('no');
+      fb.textContent = `Сейчас ${v*10}%. Нужно 40% = 4 конфеты из 10. Попробуй ещё раз.`;
+      beep(300, 0.2);
+    }
+  });
+
+  nextBtn.addEventListener('click', ()=>{
+    beep();
+    nextLessonStep();
+  });
+}
+
+/* ==================== ШАГ 3: СМЕШИВАЕМ МЕШОЧКИ (DRAG&DROP) ==================== */
+function renderLesson3(){
+  state.screen = 'lesson';
+  save();
+  const bags = [
+    {id:'A', emoji:'🎒', label:'Мешочек A', detail:'100 г · 20% шоколада', mass:100, conc:20},
+    {id:'B', emoji:'👝', label:'Мешочек B', detail:'200 г · 50% шоколада', mass:200, conc:50}
+  ];
+
+  const html = lessonShell(2, 'Шаг 3 · Смешиваем мешочки', `
+    <div class="hero-say">
+      <div class="hero-avatar">🐱</div>
+      <div class="hero-text"><b>Котэ-Косинус:</b> «В одном мешочке 100 г конфет, из них 20% шоколадных. В другом — 200 г, из них 50% шоколадных. Перетащи оба мешочка в вазу (или кликни по мешочку) — и мы посмотрим, что получилось.»</div>
+    </div>
+
+    <div class="bags-row" id="bagsRow">
+      ${bags.map(b=>`<div class="bag" data-bag="${b.id}" draggable="true">
+        <div class="bag-icon">${b.emoji}</div>
+        <div class="bag-label">${b.label}<small>${b.detail}</small></div>
+      </div>`).join('')}
+    </div>
+
+    <div class="jar" id="jar">
+      <div class="jar-icon" id="jarIcon">🏺</div>
+      <div class="jar-label" id="jarLabel">Общая ваза<br><small style="color:#7a5a10">перетащи сюда мешочки</small></div>
+    </div>
+
+    <div id="mixFb3" class="calc-fb hidden"></div>
+
+    <div class="advance-row">
+      <button class="btn-n" id="lessonResetBtn3" type="button">↺ Сброс</button>
+      <button class="btn-p" id="lessonNextBtn3" type="button" disabled>Дальше →</button>
+    </div>
+  `);
+  main().innerHTML = html;
+  updateHUD();
+
+  const jar = $('jar');
+  const jarLabel = $('jarLabel');
+  const jarIcon = $('jarIcon');
+  const fb = $('mixFb3');
+  const nextBtn = $('lessonNextBtn3');
+  const bagsRow = $('bagsRow');
+  let placed = new Set();
+  let selected = null;
+
+  function render(){
+    bagsRow.querySelectorAll('.bag').forEach(el=>{
+      if(placed.has(el.dataset.bag)) el.classList.add('used');
+      else el.classList.remove('used');
+      if(selected === el.dataset.bag) el.style.borderColor = 'var(--p1)';
+      else el.style.borderColor = '';
+    });
+    if(placed.size === 2){
+      const totalMass = 300;
+      const totalChoc = 100*0.2 + 200*0.5; // 20 + 100 = 120
+      const conc = Math.round(totalChoc / totalMass * 100);
+      jarIcon.textContent = '🍫';
+      jarLabel.innerHTML = `<b>Шоколада:</b> 20 г + 100 г = <b>120 г</b><br><b>Всего:</b> 100 г + 200 г = <b>300 г</b><br><b>Доля шоколада:</b> 120/300 = <b>${conc}%</b>`;
+      fb.classList.remove('hidden', 'no');
+      fb.classList.add('ok');
+      fb.innerHTML = `<b>✓ Здорово!</b> Шоколад не исчез — он сложился: 20 + 100 = 120 г. Масса тоже сложилась: 100 + 200 = 300 г. Доля шоколада в общей вазе — <b>120/300 = 40%</b>.`;
+      nextBtn.disabled = false;
+      if(!fb.dataset.done){
+        fb.dataset.done = '1';
+        confetti(16);
+        beep(1046, 0.4);
+      }
+    } else if(placed.size === 1){
+      jarIcon.textContent = '👝';
+      jarLabel.innerHTML = 'Один мешочек в вазе.<br><small style="color:#7a5a10">добавь второй</small>';
+      fb.classList.add('hidden');
+      nextBtn.disabled = true;
+    } else {
+      jarIcon.textContent = '🏺';
+      jarLabel.innerHTML = 'Общая ваза<br><small style="color:#7a5a10">перетащи сюда мешочки</small>';
+      fb.classList.add('hidden');
+      nextBtn.disabled = true;
+    }
+  }
+
+  function placeBag(id){
+    if(placed.has(id)) return;
+    placed.add(id);
+    selected = null;
+    render();
+    beep(880, 0.2);
+  }
+
+  bagsRow.querySelectorAll('.bag').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(placed.has(el.dataset.bag)) return;
+      if(selected === el.dataset.bag){
+        placeBag(el.dataset.bag);
+      } else {
+        selected = el.dataset.bag;
+        render();
+        beep(660, 0.1);
+      }
+    });
+    el.addEventListener('dragstart', e=>{
+      selected = el.dataset.bag;
+      e.dataTransfer.effectAllowed = 'move';
+      try{ e.dataTransfer.setData('text/plain', el.dataset.bag); }catch(_){}
+    });
+  });
+
+  jar.addEventListener('click', ()=>{
+    if(selected) placeBag(selected);
+  });
+  jar.addEventListener('dragover', e=>{ e.preventDefault(); jar.style.transform = 'scale(1.03)'; });
+  jar.addEventListener('dragleave', ()=>{ jar.style.transform = ''; });
+  jar.addEventListener('drop', e=>{
+    e.preventDefault();
+    jar.style.transform = '';
+    let id = selected;
+    try{ const d = e.dataTransfer.getData('text/plain'); if(d) id = d; }catch(_){}
+    if(id) placeBag(id);
+  });
+
+  $('lessonResetBtn3').addEventListener('click', ()=>{
+    placed.clear();
+    selected = null;
+    fb.dataset.done = '';
+    render();
+    beep(440, 0.15);
+  });
+
+  nextBtn.addEventListener('click', ()=>{
+    beep();
+    nextLessonStep();
+  });
+
+  render();
+}
+
+/* ==================== ШАГ 4: СРЕДНЕВЗВЕШЕННОЕ ==================== */
+function renderLesson4(){
+  state.screen = 'lesson';
+  save();
+  const html = lessonShell(3, 'Шаг 4 · Метод средневзвешенного', `
+    <div class="hero-say">
+      <div class="hero-avatar">🐱</div>
+      <div class="hero-text"><b>Котэ-Косинус:</b> «Заметил? Мы всё время делали одно и то же: считали шоколад в каждом мешочке, складывали и делили на общую массу. Это и есть <b>средневзвешенное</b> — „среднее с учётом веса каждого мешочка“. Реши задачу.»</div>
+    </div>
+
+    <div class="lesson-formula">
+      <div class="f-line">Доля = (m₁·p₁ + m₂·p₂) ÷ (m₁ + m₂)</div>
+      <div class="f-line" style="font-size:13px;color:var(--soft);font-weight:600">m — масса мешочка, p — доля вещества в нём</div>
+    </div>
+
+    <div class="calc-task"><b>Задача:</b> смешали 200 г 30%-го сиропа и 300 г 10%-го сиропа. Какая концентрация получилась?</div>
+
+    <div class="calc-row">
+      <input class="calc-input" id="lessonInput4" type="text" inputmode="decimal" placeholder="Введи ответ" autocomplete="off">
+      <span class="calc-unit">%</span>
+      <button class="btn-g" id="lessonCheckBtn4" type="button">✓ Проверить</button>
+    </div>
+    <div id="lessonFb4" class="calc-fb hidden"></div>
+    <div style="margin-top:10px">
+      <button class="btn-n" id="lessonHintBtn4" type="button">💡 Подсказка</button>
+    </div>
+    <div id="lessonHint4" class="hint-box hidden">💡 <b>Подсказка:</b> сироп в 1-м: 200 × 0,30 = 60 г. Сироп во 2-м: 300 × 0,10 = 30 г. Всего сиропа: 60 + 30 = 90 г. Всего смеси: 200 + 300 = 500 г. Концентрация: 90 ÷ 500 × 100% = ?</div>
+
+    <div class="center" style="margin-top:16px">
+      <button class="btn-p hidden" id="lessonFinishBtn" type="button">🎉 Завершить урок</button>
+    </div>
+  `);
+  main().innerHTML = html;
+  updateHUD();
+
+  const input = $('lessonInput4');
+  const fb = $('lessonFb4');
+  const checkBtn = $('lessonCheckBtn4');
+  const finishBtn = $('lessonFinishBtn');
+
+  checkBtn.addEventListener('click', ()=>{
+    const raw = input.value.trim();
+    if(!raw){ toast('Введи число'); return; }
+    const val = parseFloat(raw.replace(',', '.'));
+    if(isNaN(val)){ toast('Введи число'); return; }
+    fb.classList.remove('hidden', 'ok', 'no');
+    if(Math.abs(val - 18) < 0.001){
+      fb.classList.add('ok');
+      fb.innerHTML = `<b>✓ Верно!</b> 90 ÷ 500 × 100% = <b>18%</b>. Это и есть средневзвешенное: 30% и 10% «взвесились» по массе мешочков.`;
+      input.disabled = true;
+      checkBtn.disabled = true;
+      finishBtn.classList.remove('hidden');
+      confetti(20);
+      beep(1046, 0.4);
+    } else {
+      fb.classList.add('no');
+      fb.textContent = 'Не совсем. Открой подсказку или попробуй ещё раз.';
+      input.classList.add('shake');
+      setTimeout(()=>input.classList.remove('shake'), 500);
+      beep(300, 0.2);
+    }
+  });
+
+  input.addEventListener('keydown', e=>{
+    if(e.key === 'Enter'){ e.preventDefault(); checkBtn.click(); }
+  });
+
+  $('lessonHintBtn4').addEventListener('click', ()=>{
+    $('lessonHint4').classList.toggle('hidden');
+    beep(660, 0.1);
+  });
+
+  finishBtn.addEventListener('click', ()=>{
+    beep();
+    finishLesson();
+  });
+
+  setTimeout(()=>input.focus(), 100);
+}
+
+/* ==================== УРОК: ФИНАЛ ==================== */
+function finishLesson(){
+  const firstTime = !state.lessonDone;
+  state.lessonDone = true;
+  state.lessonStep = 4;
+  if(firstTime){
+    state.coins += 20;
+  }
+  updateHUD();
+  save();
+  renderLessonFinal(firstTime);
+}
+
+function renderLessonFinal(firstTime){
+  state.screen = 'lesson';
+  save();
+  main().innerHTML = `
+    <section class="card final">
+      <div class="trophy">🎉</div>
+      <h2 style="margin:6px 0;background:linear-gradient(135deg,var(--p1d),var(--p2));-webkit-background-clip:text;background-clip:text;color:transparent">Урок на конфетах пройден!</h2>
+      <p class="sub" style="color:var(--soft);margin:0 0 8px">${firstTime ? 'Ты заработал +20 монет' : 'Повторение — мать учения'}</p>
+      <div class="medal">${firstTime ? '🍬 Знаток конфет' : '🍬 Повторятель'}</div>
+
+      <div class="summary">
+        <h3>Что ты узнал</h3>
+        <div class="rule-line"><span>1.</span><span><b>Доля</b> — это часть от целого. 3 из 10 = 30%.</span></div>
+        <div class="rule-line"><span>2.</span><span><b>Бар-модель</b> — полоска, где видно, сколько занимает каждая часть.</span></div>
+        <div class="rule-line"><span>3.</span><span><b>При смешивании</b> вещество складывается: 20 г + 100 г = 120 г.</span></div>
+        <div class="rule-line"><span>4.</span><span><b>Средневзвешенное</b>: (m₁·p₁ + m₂·p₂) ÷ (m₁ + m₂).</span></div>
+      </div>
+
+      <div class="hero-say" style="margin-top:16px;text-align:left">
+        <div class="hero-avatar">🐱</div>
+        <div class="hero-text"><b>Котэ-Косинус:</b> «Мяу! Теперь в тренажёре будет всё то же самое, только с солью и водой. Главное правило — <b>вещество не исчезает</b>. Погнали!»</div>
+      </div>
+
+      <div class="advance-row" style="margin-top:14px">
+        <button class="btn-p" id="toTrainerBtn" type="button">🚀 К тренажёру</button>
+        <button class="btn-n" id="toMenuBtn" type="button">🏠 В меню</button>
+      </div>
+    </section>
+  `;
+  updateHUD();
+
+  $('toTrainerBtn').addEventListener('click', ()=>{
+    beep();
+    renderStage(state.completed.length >= STAGES.length ? 0 : state.completed.length);
+  });
+  $('toMenuBtn').addEventListener('click', ()=>renderIntro());
+
+  if(firstTime){
+    confetti(50);
+    setTimeout(()=>confetti(30), 600);
+    beep(1046, 0.6);
+  }
+}
+
+/* ==================== SHELL ТРЕНАЖЁРА ==================== */
+function stageShell(st, contentHTML){
+  const idx = state.completed.length;
+  const dots = STAGES.map((_,i)=>{
+    const cls = i < state.completed.length ? 'done' : (i === idx ? 'now' : '');
+    return `<span class="${cls}"></span>`;
+  }).join('');
+
+  return `
+    <section class="card">
+      <div class="stage-head">
+        <div class="world">${st.world}</div>
+        <h2>${st.title}</h2>
+        <div class="dots">${dots}</div>
+      </div>
+      <div class="hero-say">
+        <div class="hero-avatar">🐱</div>
+        <div class="hero-text"><b>Котэ-Косинус:</b> «${st.story}»</div>
+      </div>
+      ${contentHTML}
+      <div id="doneBanner" class="done-banner hidden"></div>
+      <div class="advance-row">
+        <button class="btn-p" id="nextBtn" type="button" disabled>${idx === STAGES.length - 1 ? '🏆 Итоги' : 'Дальше →'}</button>
+      </div>
+    </section>
+  `;
+}
+
+function completeStage(bonusCoins=10){
+  const idx = state.completed.length;
+  if(idx >= STAGES.length) return;
+  const st = STAGES[idx];
+  state.completed.push(st.id);
+  state.coins += bonusCoins;
+  updateHUD();
+  save();
+  const banner = $('doneBanner');
+  if(banner){
+    banner.classList.remove('hidden');
+    banner.innerHTML = `✓ Испытание пройдено!<span class="bonus">+${bonusCoins} монет</span>`;
+  }
+  const btn = $('nextBtn');
+  if(btn) btn.disabled = false;
+  beep(1046, 0.5);
+  confetti(18);
+}
+
+/* ==================== РЕНДЕР ТРЕНАЖЁРА ==================== */
+function renderStage(idx){
+  if(idx >= STAGES.length){ renderFinal(); return; }
+  state.screen = 'stage';
+  save();
+  const st = STAGES[idx];
+  main().innerHTML = stageShell(st, `<div id="stageBody"></div>`);
+  updateHUD();
+  const body = $('stageBody');
+  if(st.type === 'sort') renderSort(body, st);
+  else if(st.type === 'calc') renderCalc(body, st);
+  else if(st.type === 'mix') renderMix(body, st);
+
+  $('nextBtn').addEventListener('click', ()=>{
+    if(state.completed.length >= STAGES.length) renderFinal();
+    else renderStage(state.completed.length);
+  });
+}
+
+/* ==================== SORT ==================== */
+function renderSort(container, st){
+  const items = shuffle([...st.items]);
+  container.innerHTML = `
+    <div class="pool" id="sortPool">
+      ${items.map(it => `<div class="chip-el" data-id="${it.id}" draggable="true">${it.emoji} ${it.text}</div>`).join('')}
+    </div>
+    <div class="baskets">
+      ${st.baskets.map(b => `
+        <div class="basket" data-basket="${b.id}">
+          <div class="basket-head">
+            <span>${b.emoji}</span>
+            <span>${b.name}</span>
+            ${b.sub ? `<span class="b-sub">${b.sub}</span>` : ''}
+          </div>
+          <div class="basket-body"></div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="advance-row" style="margin-top:14px">
+      <button class="btn-g" id="checkSortBtn" type="button">✓ Проверить</button>
+      <button class="btn-n" id="resetSortBtn" type="button">↺ Сброс</button>
+    </div>
+  `;
+
+  const answers = {};
+  let selectedChipId = null;
+
+  function makePoolChip(item){
+    const chip = document.createElement('div');
+    chip.className = 'chip-el';
+    chip.dataset.id = item.id;
+    chip.draggable = true;
+    chip.textContent = `${item.emoji} ${item.text}`;
+    chip.addEventListener('click', ()=>{
+      container.querySelectorAll('#sortPool .chip-el').forEach(c=>{
+        if(c !== chip) c.classList.remove('selected');
+      });
+      if(chip.classList.contains('selected')){
+        chip.classList.remove('selected');
+        selectedChipId = null;
+      } else {
+        chip.classList.add('selected');
+        selectedChipId = item.id;
+      }
+      beep(660, 0.1);
+    });
+    chip.addEventListener('dragstart', e=>{
+      selectedChipId = item.id;
+      e.dataTransfer.effectAllowed = 'move';
+      try{ e.dataTransfer.setData('text/plain', item.id); }catch(_){}
+      chip.classList.add('selected');
+    });
+    chip.addEventListener('dragend', ()=>chip.classList.remove('selected'));
+    return chip;
+  }
+
+  function returnToPool(chipId){
+    const item = st.items.find(it => it.id === chipId);
+    if(!item) return;
+    container.querySelectorAll('.basket-body .chip-el').forEach(c=>{
+      if(c.dataset.id === chipId) c.remove();
+    });
+    delete answers[chipId];
+    const pool = container.querySelector('#sortPool');
+    pool.appendChild(makePoolChip(item));
+  }
+
+  function placeChip(chipId, basketId){
+    const item = st.items.find(it => it.id === chipId);
+    if(!item) return;
+    container.querySelectorAll('.basket-body .chip-el').forEach(c=>{
+      if(c.dataset.id === chipId) c.remove();
+    });
+    const poolChip = container.querySelector(`#sortPool .chip-el[data-id="${chipId}"]`);
+    if(poolChip) poolChip.remove();
+
+    const target = container.querySelector(`.basket[data-basket="${basketId}"] .basket-body`);
+    const chip = document.createElement('div');
+    chip.className = 'chip-el placed';
+    chip.dataset.id = chipId;
+    chip.textContent = `${item.emoji} ${item.text}`;
+    chip.addEventListener('click', ()=>{
+      returnToPool(chipId);
+      beep(440, 0.15);
+    });
+    target.appendChild(chip);
+    answers[chipId] = basketId;
+    beep(880, 0.15);
+  }
+
+  container.querySelectorAll('#sortPool .chip-el').forEach(chip=>{
+    chip.replaceWith(makePoolChip(st.items.find(it=>it.id===chip.dataset.id)));
+  });
+
+  container.querySelectorAll('.basket').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      if(selectedChipId){
+        placeChip(selectedChipId, b.dataset.basket);
+        selectedChipId = null;
+        container.querySelectorAll('#sortPool .chip-el').forEach(c=>c.classList.remove('selected'));
+      }
+    });
+    b.addEventListener('dragover', e=>{ e.preventDefault(); b.classList.add('active-drop'); });
+    b.addEventListener('dragleave', ()=>b.classList.remove('active-drop'));
+    b.addEventListener('drop', e=>{
+      e.preventDefault();
+      b.classList.remove('active-drop');
+      let id = selectedChipId;
+      try{ const d = e.dataTransfer.getData('text/plain'); if(d) id = d; }catch(_){}
+      if(id) placeChip(id, b.dataset.basket);
+      selectedChipId = null;
+    });
+  });
+
+  container.querySelector('#resetSortBtn').addEventListener('click', ()=>{
+    container.querySelectorAll('.basket-body .chip-el').forEach(c=>c.remove());
+    Object.keys(answers).forEach(k => delete answers[k]);
+    const pool = container.querySelector('#sortPool');
+    pool.innerHTML = '';
+    shuffle([...st.items]).forEach(it=>pool.appendChild(makePoolChip(it)));
+    selectedChipId = null;
+    beep(440, 0.15);
+  });
+
+  container.querySelector('#checkSortBtn').addEventListener('click', ()=>{
+    if(Object.keys(answers).length !== st.items.length){
+      toast('Сначала разложи все карточки');
+      return;
+    }
+    const wrongBaskets = new Set();
+    st.items.forEach(it=>{
+      if(answers[it.id] !== it.correct) wrongBaskets.add(answers[it.id]);
+    });
+    if(wrongBaskets.size === 0){
+      completeStage(10);
+      container.querySelector('#checkSortBtn').disabled = true;
+    } else {
+      wrongBaskets.forEach(bid=>{
+        const b = container.querySelector(`.basket[data-basket="${bid}"]`);
+        if(b){ b.classList.add('wrong'); setTimeout(()=>b.classList.remove('wrong'), 900); }
+      });
+      beep(220, 0.25);
+      toast('Не совсем. Проверь, что где лежит.');
+    }
+  });
+}
+
+/* ==================== CALC ==================== */
+function barModelHTML(cfg){
+  const { total, percent, solute, question } = cfg;
+  let pct1, pct2, lbl1, lbl2, sub1, sub2;
+  if(question === 'solute'){
+    pct1 = percent;
+    pct2 = 100 - percent;
+    lbl1 = '?';
+    lbl2 = `${pct2}%`;
+    sub1 = `${percent}% соли`;
+    sub2 = 'вода';
+  } else {
+    pct1 = Math.max(1, Math.round(solute / total * 100));
+    pct2 = 100 - pct1;
+    lbl1 = `${solute} г`;
+    lbl2 = `${total - solute} г`;
+    sub1 = 'соль';
+    sub2 = 'вода';
+  }
+  return `
+    <div class="bar-model">
+      <div class="bar-row">
+        <div class="bar-seg bar-seg-solute" style="flex:${pct1}">
+          <div class="bar-lbl">${lbl1}</div>
+          <div class="bar-sub">${sub1}</div>
+        </div>
+        <div class="bar-seg bar-seg-solvent" style="flex:${pct2}">
+          <div class="bar-lbl">${lbl2}</div>
+          <div class="bar-sub">${sub2}</div>
+        </div>
+      </div>
+      <div class="bar-total">Всего: ${total} г</div>
+    </div>
+  `;
+}
+
+function renderCalc(container, st){
+  let attempts = 0;
+  const visual = st.barModel ? barModelHTML(st.barModel) : '';
+
+  container.innerHTML = `
+    ${visual}
+    <div class="calc-task"><b>${st.question}</b></div>
+    <div class="calc-row">
+      <input class="calc-input" id="calcInput" type="text" inputmode="decimal" placeholder="Введи ответ" autocomplete="off">
+      <span class="calc-unit">${st.unit}</span>
+      <button class="btn-g" id="checkBtn" type="button">✓ Проверить</button>
+    </div>
+    <div id="calcFb" class="calc-fb hidden"></div>
+    <div style="margin-top:10px">
+      <button class="btn-n" id="hintBtn" type="button">💡 Показать подсказку</button>
+    </div>
+    <div id="hintText" class="hint-box hidden">💡 <b>Подсказка:</b> ${st.hint}</div>
+  `;
+
+  const input = container.querySelector('#calcInput');
+  const fb = container.querySelector('#calcFb');
+  const checkBtn = container.querySelector('#checkBtn');
+
+  function check(){
+    const raw = input.value.trim();
+    if(!raw){ toast('Введи число'); return; }
+    const val = parseFloat(raw.replace(',', '.'));
+    if(isNaN(val)){ toast('Введи число'); return; }
+    const isCorrect = Math.abs(val - st.answer) < 0.001;
+    fb.classList.remove('hidden', 'ok', 'no');
+    if(isCorrect){
+      fb.classList.add('ok');
+      fb.innerHTML = `<b>✓ Верно!</b> ${st.solution}`;
+      input.disabled = true;
+      checkBtn.disabled = true;
+      completeStage(10);
+    } else {
+      fb.classList.add('no');
+      fb.textContent = 'Не совсем. Попробуй ещё раз или открой подсказку.';
+      input.classList.add('shake');
+      setTimeout(()=>input.classList.remove('shake'), 500);
+      attempts++;
+      beep(300, 0.2);
+      if(attempts >= 2){
+        container.querySelector('#hintText').classList.remove('hidden');
+      }
+    }
+  }
+
+  input.addEventListener('keydown', e=>{
+    if(e.key === 'Enter'){ e.preventDefault(); check(); }
+  });
+  checkBtn.addEventListener('click', check);
+
+  container.querySelector('#hintBtn').addEventListener('click', ()=>{
+    container.querySelector('#hintText').classList.toggle('hidden');
+    beep(660, 0.1);
+  });
+
+  setTimeout(()=>input.focus(), 100);
+}
+
+/* ==================== MIX ==================== */
+function concColor(c){
+  const t = Math.max(0, Math.min(c / 40, 1));
+  const r = Math.round(214 - t * 146);
+  const g = Math.round(197 - t * 134);
+  const b = Math.round(255 - t * 55);
+  return `rgb(${r},${g},${b})`;
+}
+
+function beakerSVG(conc){
+  const color = concColor(conc);
+  const fillH = Math.max(8, Math.min(conc / 40, 1) * 100);
+  const fillY = 135 - fillH;
+  return `
+    <svg viewBox="0 0 80 150" class="beaker-svg" aria-hidden="true">
+      <rect x="14" y="10" width="52" height="8" rx="4" fill="#c9b8ff" opacity="0.55"/>
+      <rect x="16" y="20" width="48" height="115" rx="6" fill="#ffffff" stroke="#7a6fa8" stroke-width="2.5"/>
+      <rect x="18" y="${fillY}" width="44" height="${fillH}" fill="${color}" rx="3"/>
+      <rect x="22" y="26" width="5" height="${Math.max(10, Math.min(fillH - 14, 70))}" fill="white" opacity="0.35" rx="2"/>
+    </svg>
+  `;
+}
+
+function resultBeakerSVG(){
+  return `
+    <svg viewBox="0 0 80 150" class="beaker-svg" aria-hidden="true">
+      <rect x="14" y="10" width="52" height="8" rx="4" fill="#c9b8ff" opacity="0.55"/>
+      <rect x="16" y="20" width="48" height="115" rx="6" fill="#f6f1ff" stroke="#7a6fa8" stroke-width="2.5" stroke-dasharray="5 4"/>
+      <text x="40" y="88" font-size="34" font-weight="900" fill="#8b6dff" text-anchor="middle">?</text>
+    </svg>
+  `;
+}
+
+function renderMix(container, st){
+  let attempts = 0;
+  const [b1, b2] = st.beakers;
+
+  container.innerHTML = `
+    <div class="mix-visual">
+      <div class="mix-item">
+        ${beakerSVG(b1.conc)}
+        <div class="mix-label">${b1.mass} г · ${b1.conc}%</div>
+      </div>
+      <div class="mix-plus">+</div>
+      <div class="mix-item">
+        ${beakerSVG(b2.conc)}
+        <div class="mix-label">${b2.mass} г · ${b2.conc}%</div>
+      </div>
+      <div class="mix-eq">=</div>
+      <div class="mix-item mix-result">
+        ${resultBeakerSVG()}
+        <div class="mix-label">${st.resultMass} г · ?%</div>
+      </div>
+    </div>
+    <div class="calc-task"><b>${st.question}</b></div>
+    <div class="calc-row">
+      <input class="calc-input" id="mixInput" type="text" inputmode="decimal" placeholder="Введи ответ" autocomplete="off">
+      <span class="calc-unit">${st.unit}</span>
+      <button class="btn-g" id="mixCheckBtn" type="button">✓ Проверить</button>
+    </div>
+    <div id="mixFb" class="calc-fb hidden"></div>
+    <div style="margin-top:10px">
+      <button class="btn-n" id="mixHintBtn" type="button">💡 Показать подсказку</button>
+    </div>
+    <div id="mixHintText" class="hint-box hidden">💡 <b>Подсказка:</b> ${st.hint}</div>
+  `;
+
+  const input = container.querySelector('#mixInput');
+  const fb = container.querySelector('#mixFb');
+  const checkBtn = container.querySelector('#mixCheckBtn');
+
+  function check(){
+    const raw = input.value.trim();
+    if(!raw){ toast('Введи число'); return; }
+    const val = parseFloat(raw.replace(',', '.'));
+    if(isNaN(val)){ toast('Введи число'); return; }
+    const isCorrect = Math.abs(val - st.answer) < 0.001;
+    fb.classList.remove('hidden', 'ok', 'no');
+    if(isCorrect){
+      fb.classList.add('ok');
+      fb.innerHTML = `<b>✓ Верно!</b> ${st.solution}`;
+      input.disabled = true;
+      checkBtn.disabled = true;
+      completeStage(10);
+    } else {
+      fb.classList.add('no');
+      fb.textContent = 'Не совсем. Попробуй ещё раз или открой подсказку.';
+      input.classList.add('shake');
+      setTimeout(()=>input.classList.remove('shake'), 500);
+      attempts++;
+      beep(300, 0.2);
+      if(attempts >= 2){
+        container.querySelector('#mixHintText').classList.remove('hidden');
+      }
+    }
+  }
+
+  input.addEventListener('keydown', e=>{
+    if(e.key === 'Enter'){ e.preventDefault(); check(); }
+  });
+  checkBtn.addEventListener('click', check);
+
+  container.querySelector('#mixHintBtn').addEventListener('click', ()=>{
+    container.querySelector('#mixHintText').classList.toggle('hidden');
+    beep(660, 0.1);
+  });
+
+  setTimeout(()=>input.focus(), 100);
+}
+
+/* ==================== ФИНАЛ ТРЕНАЖЁРА ==================== */
+function renderFinal(){
+  state.screen = 'final';
+  save();
+  const total = STAGES.length;
+  const allDone = state.completed.length === total;
+
+  main().innerHTML = `
+    <section class="card final">
+      <div class="trophy">🏆</div>
+      <h2 style="margin:6px 0;background:linear-gradient(135deg,var(--p1d),var(--p2));-webkit-background-clip:text;background-clip:text;color:transparent">Тренажёр пройден!</h2>
+      <p class="sub" style="color:var(--soft);margin:0 0 8px">${allDone ? 'Все 6 испытаний пройдены!' : 'Ты прошёл ' + state.completed.length + ' из ' + total + ' испытаний.'}</p>
+      <div class="medal">${allDone ? '🏅 Мастер смесей' : '🎖 Ученик смесей'}</div>
+
+      <div class="summary">
+        <h3>Памятка на будущее</h3>
+        <div class="rule-line"><span>1.</span><span><b>Вещество</b> — то, что растворяют (соль, сахар, сироп).</span></div>
+        <div class="rule-line"><span>2.</span><span><b>Растворитель</b> — в чём растворяют (вода).</span></div>
+        <div class="rule-line"><span>3.</span><span><b>Смесь (раствор)</b> — что получилось вместе.</span></div>
+        <div class="rule-line"><span>4.</span><span><b>Концентрация</b> = масса вещества ÷ масса смеси × 100%.</span></div>
+        <div class="rule-line"><span>5.</span><span><b>При смешивании вещество не исчезает</b> — оно суммируется.</span></div>
+        <div class="rule-line"><span>6.</span><span><b>При разбавлении</b> масса вещества не меняется, растёт только масса смеси.</span></div>
+      </div>
+
+      <div class="hero-say" style="margin-top:16px;text-align:left">
+        <div class="hero-avatar">🐱</div>
+        <div class="hero-text"><b>Котэ-Косинус:</b> «Мяу! Теперь ты знаешь главный секрет задач на смеси: считай вещество, а не „налитое“. Дальше — сплавы и проценты, там то же правило. Ты справишься!»</div>
+      </div>
+
+      <div class="advance-row" style="margin-top:14px">
+        <button class="btn-n" id="againBtn" type="button">↺ Пройти заново</button>
+        <button class="btn-p" id="homeBtn2" type="button">🏠 В меню</button>
+      </div>
+      <p class="tiny" style="margin-top:16px">Заработано монет: <b style="color:var(--p1d)">${state.coins}</b></p>
+    </section>
+  `;
+  updateHUD();
+
+  $('againBtn').addEventListener('click', ()=>{
+    state = freshState();
+    save();
+    renderIntro();
+  });
+  $('homeBtn2').addEventListener('click', ()=>renderIntro());
+
+  confetti(50);
+  setTimeout(()=>confetti(30), 600);
+  beep(1046, 0.6);
+}
+
+/* ==================== МЕНЮ ==================== */
+$('menuBtn').addEventListener('click', ()=>{
+  if(state.screen === 'lesson'){
+    state.lessonStep = 0;
+  }
+  renderIntro();
+});
+
+/* ==================== BOOT ==================== */
+(function boot(){
+  updateHUD();
+  if(state.screen === 'lesson'){
+    renderLesson();
+  } else if(state.screen === 'final'){
+    renderFinal();
+  } else if(state.screen === 'stage' && state.completed.length < STAGES.length){
+    renderStage(state.completed.length);
+  } else {
+    renderIntro();
+  }
+})();
+</script>
+</body>
+</html>
